@@ -128,7 +128,12 @@ def dashboard():
     with b:
         st.subheader("Cumulative profit by round")
         df["cum"] = df.sort_values("round").groupby("team")["profit"].cumsum()
-        st.altair_chart(alt.Chart(df).mark_line(point=True).encode(x=alt.X("round:O", title="Round"), y=alt.Y("cum:Q", title="Cumulative profit ($)"), color="team:N"), width='stretch')
+        col = alt.Color("team:N", legend=None, scale=alt.Scale(scheme="category20"))
+        ends = df.sort_values("round").groupby("team").tail(1).sort_values("cum")
+        ends = ends.iloc[list(range(min(2,len(ends))))+list(range(max(2,len(ends)-3),len(ends)))].drop_duplicates("team")
+        ln = alt.Chart(df).mark_line(point=True).encode(x=alt.X("round:O", title="Round"), y=alt.Y("cum:Q", title="Cumulative profit ($)"), color=col, tooltip=["team", "round", "cum"])
+        lb_txt = alt.Chart(ends).mark_text(align="left", dx=8, fontSize=11).encode(x="round:O", y="cum:Q", text="team:N", color=col)
+        st.altair_chart(alt.layer(ln, lb_txt).properties(padding={"right": 120}), width='stretch')
 
     c, d = st.columns(2)
     with c:
